@@ -64,6 +64,7 @@ ToolOrchestra (reference but in TS):https://github.com/NVlabs/ToolOrchestra
 Distributed Data Layer:
 GUN.js: https://github.com/amark/gun
 IPFS: https://github.com/ipfs/ipfs
+TOR: https://github.com/TheTorProject/gettorbrowser
 
 Document & Semantic Layer:
 TipTap: https://github.com/ueberdosis/tiptap
