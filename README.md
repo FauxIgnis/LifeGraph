@@ -182,3 +182,33 @@ WASM SIMD & Threads (reference): https://github.com/WebAssembly/simd
 
 Explorer:
 Roadmap.sh (reference): https://github.com/kamranahmedse/developer-roadmap/tree/master
+
+zk-Execution Layer:
+RISC Zero zkVM: https://github.com/risc0/risc0
+Succinct SP1 zkVM: https://github.com/succinctlabs/sp1
+Delphinus zkWASM: https://github.com/DelphinusLab/zkWasm
+Wasmtime (WASM runtime): https://github.com/bytecodealliance/wasmtime
+WASI (deterministic contract interface): https://github.com/WebAssembly/WASI
+
+Proof System Layer:
+Halo2 (PLONKish proof system): https://github.com/zcash/halo2
+snarkjs (browser PLONK prover/verifier): https://github.com/iden3/snarkjs
+circom (circuit compiler): https://github.com/iden3/circom
+Poseidon Hash (zk-optimized hashing):
+https://github.com/iden3/circomlib/tree/master/circuits/poseidon
+
+State Commitment Layer:
+Sparse Merkle Tree (Merkle commitments): https://github.com/iden3/go-merkletree
+Verkle Trie (vector commitments): https://github.com/crate-crypto/verkle-trie
+
+TypeScript → WASM Contract Layer:
+AssemblyScript (TypeScript subset to WASM): https://github.com/AssemblyScript/assemblyscript
+Binaryen (WASM toolchain): https://github.com/WebAssembly/binaryen
+
+Proof Orchestration & Local P2P Layer:
+libp2p (browser-native peer-to-peer): https://github.com/libp2p/js-libp2p
+GUN.js (CRDT-based distributed graph): https://github.com/amark/gun
+
+Recursive Proof Aggregation Layer:
+Nova (recursive SNARKs): https://github.com/microsoft/Nova
+Spartan (batchable / aggregatable SNARKs): https://github.com/microsoft/Spartan
