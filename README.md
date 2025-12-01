@@ -29,10 +29,6 @@ All components converge into the chat interface, forming a unified cognitive com
 
 LifeGraph OS inherits the core advantages of decentralized architecture. Because all computation runs on the user’s own device and all state is maintained through peer-to-peer CRDT replication, the system has no central servers, no backend infrastructure, and therefore no operational scaling costs even at global scale. Hosting requires only a static build of the application, which can be mirrored indefinitely at negligible expense. This also makes the platform structurally resilient: with no central point of control and no server-side dependencies, the system is extremely difficult to block or censor. LifeGraph OS remains accessible and functional as long as users can access a browser, making it a robust, cost-free, and globally persistent cognitive environment by design.
 
-Below is text written in the exact style, density, and architectural tone of your current README. It integrates the Tor-derived mechanisms directly into the system description without breaking structure or introducing list formatting. It reads as if it was originally part of the document. Citations to the Tor file appear where required. 
-
-You can paste this either as a new section or weave it into the architecture chapter.
-
 # Trust, Isolation, and Integrity Extensions
 
 To strengthen LifeGraph OS as a long-lived, distributed cognitive environment, the system incorporates a set of privacy-preserving and integrity-maintaining mechanisms inspired by high-assurance network architectures such as Tor’s layered routing and state isolation model . Although LifeGraph OS operates at the level of semantic computation rather than packet transit, the same architectural principles apply when the goal is to limit correlation surfaces, constrain information exposure, and preserve the determinism of cognitive workflows over time.
@@ -48,6 +44,93 @@ To prevent external systems from inferring device-specific characteristics or in
 The integrity of model updates, semantic modules, and long-lived cognitive components is secured through a provenance system that parallels Tor’s update hardening measures, including cryptographic signatures, certificate pinning, and OS-agnostic request flows . Each update to the cognitive engine or semantic substrate is fetched through an isolated channel, verified against signed manifests, and incorporated into the system only after deterministic validation. This prevents supply-chain interference and ensures that every node in the distributed virtual machine evolves along a verifiable lineage.
 
 Through these extensions, LifeGraph OS adopts the essential principles of layered trust, strict isolation, uniform observability, and authenticated evolution. They reinforce the system’s role as a decentralized cognitive environment capable of operating over years, preserving privacy, integrity, and reproducibility across an ever-expanding semantic memory graph.
+
+# Validity Layer
+
+The Validity Layer extends LifeGraph OS with a minimal cryptoeconomic settlement substrate. Its purpose is to give LifeGraph programs the same enforcement guarantees as blockchain smart contracts, without adopting a full replicated execution model or gas-based VM. It does this by separating three concerns: high-level logic and data flow in LifeGraph, deterministic execution in a zk-verifiable VM, and value settlement on an external or embedded chain.
+
+The result is a pipeline where LifeGraph nodes compute, a validity engine proves, and a settlement layer commits. RSA/ISA and other financial contracts become TypeScript-native programs in LifeGraph, but their critical state transitions are anchored in an economically secured ledger.
+
+# Motivation
+
+LifeGraph OS already provides a distributed VM for knowledge and computation: TypeScript orchestration, WASM kernels, WebGPU acceleration, and CRDT-backed replicated state. This is sufficient for collaborative applications, but it does not protect against economically motivated misbehavior. A node can compute a wrong result, withhold updates, or diverge from an agreed policy, and CRDTs will not detect that as “fraud”.
+
+Financial contracts such as RSA/ISA introduce hard obligations: revenue flows, income shares, vesting schedules, termination logic. These obligations require a notion of correct execution that is auditable and enforceable, not only convergent. The Validity Layer provides this missing component.
+
+# Architecture Overview
+
+The Validity Layer defines a three-tier architecture.
+
+First, the LifeGraph Execution Tier. Application logic is written in TypeScript and runs inside the LifeGraph VM as usual. State is modeled as typed graphs and CRDT documents. Contracts are expressed as LifeGraph programs that define allowed state transitions on specific subgraphs (for example, the subgraph representing an RSA/ISA agreement and its cashflow history).
+
+Second, the Validity Engine Tier. Critical transitions are mapped to deterministic execution traces in a zk-verifiable VM (zkVM). For each transition, the engine takes: a pre-state commitment, a set of inputs (events, oracle values, signatures), and the contract code compiled to WASM, and produces a post-state commitment plus a succinct proof that the transition followed the prescribed logic. The zkVM is independent from LifeGraph’s internal runtime, but the two share a common data schema for states and transitions.
+
+Third, the Settlement Tier. A settlement layer (existing L1/L2 or an embedded ledger) accepts state commitments and validity proofs. When a proof is accepted, the settlement layer updates its own minimal state (for example, balances, escrows, payables) and emits events that LifeGraph nodes can subscribe to. Assets are held and transferred at this tier; LifeGraph only orchestrates the logic that decides how they should move.
+
+The key design point is that only commitments and proofs cross the boundary into the settlement layer, not the entire LifeGraph state or raw execution.
+
+# Formal Components
+
+The Validity Layer introduces several core types.
+
+A Validity Program is a LifeGraph contract module, written in TypeScript and compiled to a constrained WASM target suitable for zk execution. It defines a pure transition function over a typed state: given a pre-state and an input, return a post-state and a set of settlement actions.
+
+A State Commitment is a cryptographic digest (for example, a Merkle or Poseidon tree root) of the contract’s logical state as represented in LifeGraph. Only a minimal projection of the full CRDT/graph state is committed; this projection is explicitly defined in the contract schema.
+
+A Transition Witness is the set of inputs, signatures, and auxiliary data required to perform a single state transition. For RSA/ISA, this might include a revenue event, an identity mapping, a timestamp, and any rate parameters.
+
+A Validity Proof is a zk proof that the WASM execution of the Validity Program transformed the pre-state commitment into the post-state commitment using the provided Transition Witness and that all invariants held.
+
+A Settlement Action is an abstract instruction generated by the Validity Program, such as “transfer X units from A to B”, “lock Y units in escrow”, or “mark agreement Z as terminated”. These actions are interpreted and executed by the settlement layer once the validity proof is accepted.
+
+# Execution Flow
+
+A validity-protected contract in LifeGraph follows a well-defined path.
+
+First, application code in LifeGraph updates local CRDT state as usual when off-chain events occur, such as new revenue entries, updated personal data, or governance decisions. These updates are not yet economically binding.
+
+Second, when a transition is designated as settlement-relevant, the LifeGraph node responsible for the contract instance computes the reduced contract state and its commitment. The node gathers all necessary witness data and passes it, together with the contract’s Validity Program identifier and the pre-state commitment, to the Validity Engine.
+
+Third, the Validity Engine runs the contract’s WASM code inside the zkVM. The zkVM deterministically computes the post-state commitment and the set of Settlement Actions. At the same time, it produces a zk proof attesting that the computation followed the contract specification.
+
+Fourth, the node submits the tuple of pre-state commitment, post-state commitment, Settlement Actions, and Validity Proof to the settlement layer. The settlement layer verifies the proof against the registered Validity Program. If verification succeeds, it updates its ledger state and emits events corresponding to the Settlement Actions.
+
+Fifth, LifeGraph nodes observe settlement events and reconcile their local semantic state and CRDT graphs with the new committed ledger state. This closes the loop between off-chain cognition and on-chain enforcement.
+
+# Contract Model for RSA/ISA
+
+RSA/ISA contracts in this model are defined as LifeGraph programs with a clear separation between semantic state and settlement state.
+
+The semantic state includes the full contract specification: parties, identifiers, jurisdictional data, revenue sources, income metrics, dynamic rate formulas, governance parameters, and the detailed history of events and off-chain documents. This lives entirely in LifeGraph and is modeled as a typed graph and associated documents.
+
+The settlement state is a compressed projection: outstanding share balances, accrued but unpaid obligations, current phase (active, grace, terminated), and any collateral or lockups. This projection is the only part committed to the settlement layer and used in the validity proofs.
+
+An RSA/ISA Validity Program defines the transition function for this settlement state. For each revenue or income event, the program calculates the updated obligations, determines whether thresholds or caps are reached, and generates the necessary Settlement Actions. It also encodes invariants: maximum share percentage, repayment caps, ordering rules, and termination conditions.
+
+A typical RSA/ISA cycle runs as follows. LifeGraph ingests a revenue event and links it to the appropriate agreement via its identity and context graph. The contract instance builds the transition witness: pre-state commitment, event data, and any required oracle values (for example, FX rates). The zkVM computes the new obligations and associated transfers, producing a post-state commitment and proof. The settlement layer verifies and applies transfers between tokenized balances or accounts. LifeGraph then marks those obligations as settled in its higher-level semantic model.
+
+In this arrangement, the semantic richness of RSA/ISA stays within LifeGraph, while the enforcement-critical part is small, deterministic, and verifiable.
+
+# Security and Trust Model
+
+The Validity Layer does not require global replicated execution of full LifeGraph programs. Only the minimal settlement-relevant state and logic are subject to cryptographic verification. This reduces costs and improves scalability while retaining the essential guarantees.
+
+Correctness of execution is ensured by zk proofs. Any node can act as a prover, but only proofs that verify against the registered Validity Program and known pre-state commitment are accepted.
+
+Data availability for the settlement state is handled by storing commitments and minimal variables on the settlement layer. Full semantic state remains in LifeGraph. Disputes can be resolved by re-running the transition in the zkVM and comparing commitments. Optionally, specific agreements can require that certain data fields be included as public inputs to proofs to support external auditability.
+
+Economic security comes from the settlement layer’s own cryptoeconomic design: validator incentives, slashing, and consensus. The Validity Layer does not reinvent consensus; it embeds into existing chains or a dedicated minimal ledger.
+
+# Developer Workflow
+
+From a developer’s perspective, the Validity Layer extends the LifeGraph toolchain rather than introducing a separate environment.
+
+Contract developers write LifeGraph contracts in TypeScript, using a restricted subset for the settlement-relevant transition functions. These functions are compiled to WASM and registered with the Validity Engine as Validity Programs, together with type definitions for their state and witnesses.
+
+Application developers use a TypeScript SDK to: construct transition witnesses from LifeGraph data, request proof generation from the Validity Engine, submit proofs and actions to the settlement adapter, and subscribe to settlement events. The same contract module can thus serve both a rich LifeGraph application and its cryptoeconomically enforced settlement path.
+
+By structuring contracts around a Validity Layer instead of a monolithic blockchain VM, LifeGraph OS can support complex financial instruments such as RSA/ISA while avoiding replicated gas-metered execution and preserving a TypeScript-native programming model.
+
 
 
 # Open Source Technology Stack Reference:
